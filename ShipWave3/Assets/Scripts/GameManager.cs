@@ -38,6 +38,8 @@ public class GameManager : MonoBehaviour {
 
         Debug.Log("gravity: " + Physics2D.gravity);
 
+        Input.gyro.enabled = true;
+
         mShip = GameObject.Find("TheShip");
         mAll = GameObject.Find("All");
         mCamera = GameObject.Find("Main Camera");
@@ -98,7 +100,7 @@ public class GameManager : MonoBehaviour {
 
         if (Input.gyro.enabled)
         {
-            RotateScreen(Input.gyro.rotationRate.normalized.x);
+            RotateScreen(Input.gyro.rotationRate.normalized.z);
             Debug.Log("x: " + Input.gyro.rotationRate.normalized.x + ", y: " + Input.gyro.rotationRate.normalized.y);
         }
     }
@@ -247,6 +249,14 @@ public class GameManager : MonoBehaviour {
         }
 
         return returnHeight;
+    }
+
+    void OnGUI()
+    {
+        if (GUI.Button(new Rect(200, 70, 100, 100), "Reset"))
+        {
+            mShip.transform.localPosition = Vector2.zero;
+        }
     }
     /*
     void OnGUI()
