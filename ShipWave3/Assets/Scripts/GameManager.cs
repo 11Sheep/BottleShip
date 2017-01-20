@@ -9,7 +9,11 @@ public class GameManager : MonoBehaviour {
     private static float MIN_SCALE_Y = 1f;
     private static float MAX_SCALE_Y = 3f;
 
+    private float mShipSpeed = 2f;
+
     private static int NUM_OF_OBJECTS = 20;
+
+    private GameObject mShip;
 
     float currentX = 0;
     float currentY = 0;
@@ -21,6 +25,9 @@ public class GameManager : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+
+        mShip = GameObject.Find("TheShip");
+
         mParts = new PathPartInfo[NUM_OF_OBJECTS];
 
         for (int index = 0; index < NUM_OF_OBJECTS; index++)
@@ -46,8 +53,12 @@ public class GameManager : MonoBehaviour {
     {
         if (Input.GetMouseButtonDown(0))
         {
-            AddToPath();
+            // AddToPath();
+            mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
         }
+
+        mShip.transform.Translate(Vector2.right * Time.deltaTime * mShipSpeed);
+        mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
     }
 
     private void AddToPath()
@@ -136,8 +147,47 @@ public class GameManager : MonoBehaviour {
         {
             direction = (Random.Range((int)0, (int)2) == 0) ? DirectionEnum.GoingUp : DirectionEnum.GoingDown;
             scaleX = Random.Range(MIN_SCALE_X, MAX_SCALE_X);
-            scaleY = Random.Range(MIN_SCALE_Y, MIN_SCALE_Y);
-            scaleX = (Random.Range(0, 2) == 0) ? scaleX : -scaleX;
+            scaleY = Random.Range(MIN_SCALE_Y, MAX_SCALE_Y);
+            //scaleX = (Random.Range(0, 2) == 0) ? scaleX : -scaleX;
         }
+    }
+
+    private float GetShipHeightAccordingToXPosition()
+    {
+        float returnHeight = 0;
+
+        float shipCurrentX = mShip.transform.localPosition.x;
+
+        for (int index = 0; index < NUM_OF_OBJECTS; index++)
+        {
+            if (((mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX /2)) >= shipCurrentX)  &&
+                   ((mParts[index].triangle.transform.localPosition.x - Mathf.Abs(mParts[index].scaleX / 2)) <= shipCurrentX)) 
+
+            {
+                bool isGoingUP = (mParts[index].scaleX < 0);
+
+                // Found the position, now find the exact hight
+                float positionInChunk;
+                float relativeXPosition;
+
+             //   if (isGoingUP)
+               // {
+                //    positionInChunk = mParts[index].triangle.transform.localPosition.x - Mathf.Abs(mParts[index].scaleX) - shipCurrentX;
+               //     relativeXPosition = positionInChunk / Mathf.Abs(mParts[index].scaleX);
+                //}
+               // else
+               // {
+                    positionInChunk = mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX/2) - shipCurrentX;
+                    relativeXPosition = positionInChunk / Mathf.Abs(mParts[index].scaleX);
+               // }
+
+                returnHeight = mParts[index].triangle.transform.localPosition.y + (relativeXPosition * mParts[index].scaleY);
+
+                Debug.Log("Index found: " + index + ", height: " + returnHeight);
+                break;
+            }
+        }
+
+        return returnHeight;
     }
 }
