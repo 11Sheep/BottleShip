@@ -51,11 +51,12 @@ public class GameManager : MonoBehaviour {
 
     void Update()
     {
+        /*
         if (Input.GetMouseButtonDown(0))
         {
             // AddToPath();
             mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
-        }
+        }*/
 
         mShip.transform.Translate(Vector2.right * Time.deltaTime * mShipSpeed);
         mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
@@ -148,7 +149,7 @@ public class GameManager : MonoBehaviour {
             direction = (Random.Range((int)0, (int)2) == 0) ? DirectionEnum.GoingUp : DirectionEnum.GoingDown;
             scaleX = Random.Range(MIN_SCALE_X, MAX_SCALE_X);
             scaleY = Random.Range(MIN_SCALE_Y, MAX_SCALE_Y);
-            //scaleX = (Random.Range(0, 2) == 0) ? scaleX : -scaleX;
+            scaleX = (Random.Range(0, 2) == 0) ? scaleX : -scaleX;
         }
     }
 
@@ -170,20 +171,23 @@ public class GameManager : MonoBehaviour {
                 float positionInChunk;
                 float relativeXPosition;
 
-             //   if (isGoingUP)
-               // {
-                //    positionInChunk = mParts[index].triangle.transform.localPosition.x - Mathf.Abs(mParts[index].scaleX) - shipCurrentX;
-               //     relativeXPosition = positionInChunk / Mathf.Abs(mParts[index].scaleX);
-                //}
-               // else
-               // {
-                    positionInChunk = mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX/2) - shipCurrentX;
-                    relativeXPosition = positionInChunk / Mathf.Abs(mParts[index].scaleX);
-               // }
+                if (isGoingUP)
+                {
+                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - (mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX / 2) - shipCurrentX);
+                    relativeXPosition = (positionInChunk / Mathf.Abs(mParts[index].scaleX));
+                }
+                else
+                {
+                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - ( mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX/2) - shipCurrentX);
+                    relativeXPosition = 1 - (positionInChunk / Mathf.Abs(mParts[index].scaleX));
+                }
 
-                returnHeight = mParts[index].triangle.transform.localPosition.y + (relativeXPosition * mParts[index].scaleY);
+                returnHeight = mParts[index].triangle.transform.localPosition.y + (relativeXPosition * mParts[index].scaleY) - mParts[index].scaleY/2;
 
-                Debug.Log("Index found: " + index + ", height: " + returnHeight);
+                Debug.Log("...");
+                Debug.Log("x min: " + (mParts[index].triangle.transform.localPosition.x - Mathf.Abs(mParts[index].scaleX / 2)));
+                Debug.Log("x max: " + (mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX / 2)));
+                Debug.Log("Index found: " + index + ",shipCurrentX: " + shipCurrentX + ", height: " + returnHeight);
                 break;
             }
         }
