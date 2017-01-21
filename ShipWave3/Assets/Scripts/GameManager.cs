@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
         new Color(0.99f, 0.65f, 0.45f),
     };
 
-    private static int[] mGameDifficaultyPerSection = { 0, 1, 2, 3, 4, 3, 1, 0 };
+    private static int[] mGameDifficaultyPerSection = { 0, 1, 2, 4, 5, 3, 1, 0 };
   
 
     // For testings
