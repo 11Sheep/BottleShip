@@ -73,6 +73,7 @@ public class GameManager : MonoBehaviour
 
     private int mAnimalsDeadCounter;
 
+    private Animator mTutorialAnimator;
 
     // Use this for initialization
     void Start()
@@ -84,11 +85,14 @@ public class GameManager : MonoBehaviour
         mCamera = GameObject.Find("Main Camera");
         mBackgroundSprite = GameObject.Find("Background").GetComponent<SpriteRenderer>();
 
+        
+
         mClouds = GameObject.Find("Clouds");
         mClouds.SetActive(false);
 
         mMainCanvas = GameObject.Find("MainCanvas");
         mGameCanvas = GameObject.Find("GameCanvas");
+        mTutorialAnimator = mGameCanvas.GetComponent<Animator>();
         mPauseCanvas = GameObject.Find("PauseCanvas");
         mGameFailedCanvas = GameObject.Find("GameFailedCanvas");
         mGameCanvas.SetActive(false);
@@ -135,6 +139,8 @@ public class GameManager : MonoBehaviour
         mAnimal3.transform.position = mShip.transform.position + new Vector3(2f, 4f, 0);
 
         mAnimalsDeadCounter = 0;
+
+        mTutorialAnimator.Play("ShowTutorialAnimation");
     }
 
     void Update()
