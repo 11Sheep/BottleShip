@@ -16,14 +16,18 @@ public class GameManager : MonoBehaviour
         new Color(0, 0.1f, 0.32f),
         new Color(0.99f, 0.19f, 0.42f),
         new Color(0.99f, 0.65f, 0.45f),
+        new Color(0.99f, 0.65f, 0.45f),
+        new Color(0.99f, 0.65f, 0.45f),
+        new Color(0.99f, 0.65f, 0.45f),
     };
 
-    private static int[] mGameDifficaultyPerSection = { 0, 1, 2, 2, 3, 3, 4, 4, 5, 5 };
+    private static int[] mGameDifficaultyPerSection = { 0, 1, 2, 3, 4, 3, 1, 0 };
+  
 
     // For testings
-   // private static int[] mGameDifficaultyPerSection = { 0, 1 };
+    // private static int[] mGameDifficaultyPerSection = { 0, 1 };
 
-    private static float COLOR_CHANGE_TIME = 20f;
+    private static float COLOR_CHANGE_TIME = 10f;
     private static float MIN_SCALE_X = 1f;
     private static float MAX_SCALE_X = 3f;
     private static float MIN_SCALE_Y = 1f;
@@ -176,7 +180,14 @@ public class GameManager : MonoBehaviour
             }
 
             ///mShip.transform.Translate(Vector2.right * Time.deltaTime * mShipSpeed);
-            mAll.transform.Translate(-Vector2.right * Time.deltaTime * mShipSpeed);
+            float extraSpeed = mGameDifficaultyPerSection[mSectionIndex] * 0.6f;
+
+            if (extraSpeed == 0)
+            {
+                extraSpeed = 1;
+            }
+
+            mAll.transform.Translate(-Vector2.right * Time.deltaTime * mShipSpeed * extraSpeed);
             mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition() + 2.5f);
 
             // Take the ship to the right angle
@@ -290,7 +301,7 @@ public class GameManager : MonoBehaviour
         mParts[index].triangle.transform.localScale = new Vector2(mParts[index].scaleX, mParts[index].scaleY);
 
         // Set the box
-        float scaleOfBox = 30;
+        float scaleOfBox = 60;
         mParts[index].box.transform.localScale = new Vector2(mParts[index].triangle.transform.localScale.x, scaleOfBox);
         mParts[index].box.transform.localPosition = new Vector2(mParts[index].triangle.transform.localPosition.x, mParts[index].triangle.transform.localPosition.y - mParts[index].triangle.transform.localScale.y / 2 - scaleOfBox / 2);
 
