@@ -18,13 +18,16 @@ public class GameManager : MonoBehaviour
         new Color(0.99f, 0.65f, 0.45f),
     };
 
-    private int[] mGameDifficaultyPerSection = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    private static int[] mGameDifficaultyPerSection = { 0, 1, 2, 2, 3, 3, 4, 4, 5, 5 };
+
+    // For testings
+   // private static int[] mGameDifficaultyPerSection = { 0, 1 };
 
     private static float COLOR_CHANGE_TIME = 20f;
     private static float MIN_SCALE_X = 1f;
     private static float MAX_SCALE_X = 3f;
     private static float MIN_SCALE_Y = 1f;
-    private static float MAX_SCALE_Y = 1f;
+    private static float MAX_SCALE_Y = 2f;
 
     private float mShipSpeed = 2f;
     private float mShipTurnSpeed = 20;
@@ -53,6 +56,10 @@ public class GameManager : MonoBehaviour
     private GameObject mAnimal2;
     private GameObject mAnimal3;
 
+    private GameObject mFinishedPanel;
+
+    private GameObject mBeachImage;
+
     float currentX = 0;
     float currentY = 0;
     float lastScaleX = 0;
@@ -67,7 +74,7 @@ public class GameManager : MonoBehaviour
     private bool mRightButtonPressed = false;
 
     private float colorTimer = 0;
-    private int colorIndex = 0;
+    private static int mSectionIndex = 0;
 
     private bool mIsGamePlaying = false;
 
@@ -85,7 +92,13 @@ public class GameManager : MonoBehaviour
         mCamera = GameObject.Find("Main Camera");
         mBackgroundSprite = GameObject.Find("Background").GetComponent<SpriteRenderer>();
 
-        
+        mFinishedPanel = GameObject.Find("FinishedPanel");
+        mFinishedPanel.SetActive(false);
+
+        mBeachImage = GameObject.Find("BeachImage");
+        mBeachImage.SetActive(false);
+
+        mBeachImage.SetActive(false);
 
         mClouds = GameObject.Find("Clouds");
         mClouds.SetActive(false);
@@ -141,6 +154,12 @@ public class GameManager : MonoBehaviour
         mAnimalsDeadCounter = 0;
 
         mTutorialAnimator.Play("ShowTutorialAnimation");
+
+        colorTimer = 0;
+        mSectionIndex = 0;
+
+        mLeftButtonPressed = false;
+        mRightButtonPressed = false;
     }
 
     void Update()
@@ -179,7 +198,7 @@ public class GameManager : MonoBehaviour
                 mShip.transform.localEulerAngles = new Vector3(mShip.transform.localEulerAngles.x, mShip.transform.localEulerAngles.y, mCurrentShipAngle - 90);
             }
 
-            mBackgroundSprite.color = Color.Lerp(mColors[colorIndex], mColors[colorIndex + 1], colorTimer);
+            mBackgroundSprite.color = Color.Lerp(mColors[mSectionIndex], mColors[mSectionIndex + 1], colorTimer);
 
             if (colorTimer < 1)
             { // while t below the end limit...
@@ -189,13 +208,23 @@ public class GameManager : MonoBehaviour
             else
             {
                 colorTimer = 0;
-                colorIndex++;
+                
 
                 // move to the next color
-                if (colorIndex + 1 == mColors.Length)
+                if (mSectionIndex + 2 >= mGameDifficaultyPerSection.Length)
                 {
-                    colorIndex = 0;
+                    // This is the end of the game
+                    mIsGamePlaying = false;
+                    mTutorialAnimator.Play("ShowIslandAnimation");
+                    mBeachImage.SetActive(true);
+                    StartCoroutine(GameFinished());
                 }
+                else
+                {
+                    mSectionIndex++;
+                }
+
+                Debug.Log("New section: " + mSectionIndex);
             }
         }
     }
@@ -286,7 +315,7 @@ public class GameManager : MonoBehaviour
         {
             direction = (Random.Range((int)0, (int)2) == 0) ? DirectionEnum.GoingUp : DirectionEnum.GoingDown;
             scaleX = Random.Range(MIN_SCALE_X, MAX_SCALE_X);
-            scaleY = Random.Range(MIN_SCALE_Y, MAX_SCALE_Y);
+            scaleY = Random.Range(MIN_SCALE_Y, (MAX_SCALE_Y * mGameDifficaultyPerSection[mSectionIndex]));
             scaleX = (Random.Range(0, 2) == 0) ? scaleX : -scaleX;
         }
 
@@ -350,7 +379,7 @@ public class GameManager : MonoBehaviour
                 mCurrentShipAngle += mShipAngleExtra;
                 mShipAngleExtra = 0;
                 //mCurrentSlipAngle = (slipAngle < 0) ? (slipAngle + 360) : slipAngle;
-                Debug.Log("angle: " + mCurrentSlipAngle + ", ship angle: " + mCurrentShipAngle);
+                //Debug.Log("angle: " + mCurrentSlipAngle + ", ship angle: " + mCurrentShipAngle);
 
                 // Checj if need to add another block at the end (if we are in the middle)
                 if (index == (NUM_OF_OBJECTS / 2))
@@ -362,51 +391,6 @@ public class GameManager : MonoBehaviour
         }
 
         return returnHeight;
-    }
-
-    /*
-    void OnGUI()
-    {
-        if (GUI.Button(new Rect(200, 70, 100, 100), "Rotate right"))
-        {
-            mCamera.transform.Rotate(Vector3.forward, 10);
-            mShip.transform.Rotate(Vector3.forward, 10);
-
-            Vector2 dir = (Vector2)(Quaternion.Euler(0, 0, mShip.transform.localEulerAngles.z + 90) * Vector2.right);
-            Physics2D.gravity = -dir * 9.8f;
-
-            Debug.Log("gravity: " + Physics2D.gravity);
-            //Physics2D.gravity = new Vector2(mParts[mCurrentPartIndex].scaleX, mParts[mCurrentPartIndex].scaleY);
-        }
-
-        if (GUI.Button(new Rect(50, 70, 100, 100), "Rotate left"))
-        {
-            mCamera.transform.Rotate(Vector3.forward, -10);
-            mShip.transform.Rotate(Vector3.forward, -10);
-
-            Vector2 dir = (Vector2)(Quaternion.Euler(0, 0, mShip.transform.localEulerAngles.z + 90) * Vector2.right);
-            Physics2D.gravity = -dir * 9.8f;
-
-            Debug.Log("gravity: " + Physics2D.gravity);
-            //Physics2D.gravity = new Vector2(mParts[mCurrentPartIndex].scaleX, mParts[mCurrentPartIndex].scaleY);
-        }
-
-
-    }
-    */
-
-    private void RotateScreen(float angle)
-    {
-        mCamera.transform.localEulerAngles = new Vector3(0, 0, mCamera.transform.localEulerAngles.z + angle);
-        //mCamera.transform.Rotate(Vector3.forward, angle);
-        //mShip.transform.Rotate(Vector3.forward, angle);
-        mShip.transform.localEulerAngles = new Vector3(0, 0, mShip.transform.localEulerAngles.z + angle);
-        //mShip.transform.localEulerAngles = new Vector3(0, 0, angle);
-
-        Vector2 dir = (Vector2)(Quaternion.Euler(0, 0, mShip.transform.localEulerAngles.z + 90) * Vector2.right);
-        Physics2D.gravity = -dir * 9.8f;
-
-        //Debug.Log("gravity: " + Physics2D.gravity);
     }
 
     public void OnUIShipLeftPressed()
@@ -510,5 +494,35 @@ public class GameManager : MonoBehaviour
         {
             OnGameFailed();
         }
+    }
+
+    IEnumerator GameFinished()
+    {
+        yield return new WaitForSeconds(2);
+
+        Debug.Log("You won!!!");
+
+        mFinishedPanel.SetActive(true);
+    }
+
+    public void OnUIFinishedButtonPressed()
+    {
+        mMainCanvas.SetActive(true);
+        mGameCanvas.SetActive(false);
+        mFinishedPanel.SetActive(false);
+        mBeachImage.SetActive(false);
+        mIsGamePlaying = false;
+
+        Destroy(mAnimal1);
+        Destroy(mAnimal2);
+        Destroy(mAnimal3);
+
+        // Delete all objects
+        for (int index = 0; index < NUM_OF_OBJECTS; index++)
+        {
+            Destroy(mParts[index].container);
+        }
+
+        mParts = null;
     }
 }
