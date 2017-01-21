@@ -45,7 +45,12 @@ public class GameManager : MonoBehaviour {
     private GameObject mMainCanvas;
     private GameObject mGameCanvas;
     private GameObject mPauseCanvas;
+    private GameObject mGameFailedCanvas;
     private GameObject mClouds;
+
+    private GameObject mAnimal1;
+    private GameObject mAnimal2;
+    private GameObject mAnimal3;
 
     float currentX = 0;
     float currentY = 0;
@@ -81,8 +86,10 @@ public class GameManager : MonoBehaviour {
         mMainCanvas = GameObject.Find("MainCanvas");
         mGameCanvas = GameObject.Find("GameCanvas");
         mPauseCanvas = GameObject.Find("PauseCanvas");
+        mGameFailedCanvas = GameObject.Find("GameFailedCanvas");
         mGameCanvas.SetActive(false);
         mPauseCanvas.SetActive(false);
+        mGameFailedCanvas.SetActive(false);
     }
 
     private void StartGame()
@@ -114,22 +121,20 @@ public class GameManager : MonoBehaviour {
         mCurrentShipAngle = 90;
 
         // Put the cargo on the ship
-        GameObject AnimalBox = Instantiate(Resources.Load("Animal1", typeof(GameObject))) as GameObject;
-        AnimalBox.transform.position = mShip.transform.position + new Vector3(0, 1f, 0);
+        mAnimal1 = Instantiate(Resources.Load("Animal1", typeof(GameObject))) as GameObject;
+        mAnimal1.transform.position = mShip.transform.position + new Vector3(-4f, 1f, 0);
+
+        mAnimal2 = Instantiate(Resources.Load("Animal2", typeof(GameObject))) as GameObject;
+        mAnimal2.transform.position = mShip.transform.position + new Vector3(0, 1f, 0);
+
+        mAnimal3 = Instantiate(Resources.Load("Animal3", typeof(GameObject))) as GameObject;
+        mAnimal3.transform.position = mShip.transform.position + new Vector3(4f, 1f, 0);
     }
 
     void Update()
     {
         if (mIsGamePlaying)
         {
-
-            /*
-            if (Input.GetMouseButtonDown(0))
-            {
-                // AddToPath();
-                mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
-            }*/
-
             if (mLeftButtonPressed || Input.GetKey(KeyCode.LeftArrow))
             {
                 mShipAngleExtra -= 1;
@@ -139,7 +144,8 @@ public class GameManager : MonoBehaviour {
                 mShipAngleExtra += 1;
             }
 
-            mShip.transform.Translate(Vector2.right * Time.deltaTime * mShipSpeed);
+            ///mShip.transform.Translate(Vector2.right * Time.deltaTime * mShipSpeed);
+            mAll.transform.Translate(-Vector2.right * Time.deltaTime * mShipSpeed);
             mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition() + 2.5f);
 
             // Take the ship to the right angle
@@ -161,14 +167,6 @@ public class GameManager : MonoBehaviour {
                 mShip.transform.localEulerAngles = new Vector3(mShip.transform.localEulerAngles.x, mShip.transform.localEulerAngles.y, mCurrentShipAngle - 90);
             }
 
-            /*
-            if (Input.gyro.enabled)
-            {
-                RotateScreen(Input.gyro.rotationRate.normalized.z);
-                Debug.Log("x: " + Input.gyro.rotationRate.normalized.x + ", y: " + Input.gyro.rotationRate.normalized.y);
-            }
-            */
-
             mBackgroundSprite.color = Color.Lerp(mColors[colorIndex], mColors[colorIndex + 1], colorTimer);
 
             if (colorTimer < 1)
@@ -186,6 +184,14 @@ public class GameManager : MonoBehaviour {
                 {
                     colorIndex = 0;
                 }
+            }
+
+            // Check if failed (all animatls are down)
+            if ((mAnimal1.transform.position.y < -10) &&
+                (mAnimal2.transform.position.y < -10) &&
+                (mAnimal3.transform.position.y < -10))
+            {
+                OnGameFailed();
             }
         }
     }
@@ -297,8 +303,8 @@ public class GameManager : MonoBehaviour {
 
         for (int index = 0; index < NUM_OF_OBJECTS; index++)
         {
-            if (((mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX /2)) >= shipCurrentX)  &&
-                   ((mParts[index].triangle.transform.localPosition.x - Mathf.Abs(mParts[index].scaleX / 2)) <= shipCurrentX)) 
+            if (((mParts[index].triangle.transform.position.x + Mathf.Abs(mParts[index].scaleX /2)) >= shipCurrentX)  &&
+                   ((mParts[index].triangle.transform.position.x - Mathf.Abs(mParts[index].scaleX / 2)) <= shipCurrentX)) 
 
             {
                 mCurrentPartIndex = index;
@@ -311,16 +317,16 @@ public class GameManager : MonoBehaviour {
 
                 if (mDirectionIsUp)
                 {
-                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - (mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX / 2) - shipCurrentX);
+                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - (mParts[index].triangle.transform.position.x + Mathf.Abs(mParts[index].scaleX / 2) - shipCurrentX);
                     relativeXPosition = (positionInChunk / Mathf.Abs(mParts[index].scaleX));
                 }
                 else
                 {
-                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - ( mParts[index].triangle.transform.localPosition.x + Mathf.Abs(mParts[index].scaleX/2) - shipCurrentX);
+                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - ( mParts[index].triangle.transform.position.x + Mathf.Abs(mParts[index].scaleX/2) - shipCurrentX);
                     relativeXPosition = 1 - (positionInChunk / Mathf.Abs(mParts[index].scaleX));
                 }
 
-                returnHeight = mParts[index].triangle.transform.localPosition.y + (relativeXPosition * mParts[index].scaleY) - mParts[index].scaleY/2;
+                returnHeight = mParts[index].triangle.transform.position.y + (relativeXPosition * mParts[index].scaleY) - mParts[index].scaleY/2;
 
                 // Debug.Log("...");
                 //Debug.Log("x min: " + (mParts[index].triangle.transform.localPosition.x - Mathf.Abs(mParts[index].scaleX / 2)));
@@ -423,6 +429,7 @@ public class GameManager : MonoBehaviour {
     {
         mMainCanvas.SetActive(false);
         mPauseCanvas.SetActive(false);
+        mGameFailedCanvas.SetActive(false);
         mGameCanvas.SetActive(true);
 
         mShip.SetActive(true);
@@ -461,9 +468,22 @@ public class GameManager : MonoBehaviour {
 
         mIsGamePlaying = true;
 
+        Destroy(mAnimal1);
+        Destroy(mAnimal2);
+        Destroy(mAnimal3);
+
+        mGameFailedCanvas.SetActive(false);
         mPauseCanvas.SetActive(false);
         mGameCanvas.SetActive(true);
 
         StartGame();
+    }
+
+    private void OnGameFailed()
+    {
+        mGameFailedCanvas.SetActive(true);
+        mGameCanvas.SetActive(false);
+
+        mIsGamePlaying = false;
     }
 }
