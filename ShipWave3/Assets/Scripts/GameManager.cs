@@ -5,6 +5,18 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour {
 
+    private static Color[] mColors = 
+        {
+        new Color(1, 0, 0),
+        new Color(0, 1, 0),
+        new Color(0, 0, 1),
+        new Color(1, 0, 1),
+        new Color(0, 1, 1),
+        new Color(1, 0, 1),
+        new Color(1, 1, 0)
+    };
+
+    private static float COLOR_CHANGE_TIME = 10f;
     private static float MIN_SCALE_X = 1f;
     private static float MAX_SCALE_X = 3f;
     private static float MIN_SCALE_Y = 1f;
@@ -16,6 +28,8 @@ public class GameManager : MonoBehaviour {
     private float mCurrentSlipAngle = 0;
     private float mCurrentShipAngle = 0;
     private float mShipAngleExtra = 0; // The adding of the user pressing the buttons
+
+    private SpriteRenderer mBackgroundSprite;
 
     private int mCurrentPartIndex = 0;
 
@@ -38,12 +52,16 @@ public class GameManager : MonoBehaviour {
     private bool mLeftButtonPressed = false;
     private bool mRightButtonPressed = false;
 
+    private float colorTimer = 0;
+    private int colorIndex = 0;
+
     // Use this for initialization
     void Start () {
 
         mShip = GameObject.Find("TheShip");
         mAll = GameObject.Find("All");
         mCamera = GameObject.Find("Main Camera");
+        mBackgroundSprite = GameObject.Find("Background").GetComponent<SpriteRenderer>();
 
         mParts = new PathPartInfo[NUM_OF_OBJECTS];
 
@@ -69,10 +87,13 @@ public class GameManager : MonoBehaviour {
 
         // Put the ship in the middle
         mShip.transform.position = new Vector2(mParts[NUM_OF_OBJECTS / 2].triangle.transform.localPosition.x, 0);
+        mCurrentShipAngle = 90;
 
         // Put the cargo on the ship
         GameObject AnimalBox = Instantiate(Resources.Load("Animal1", typeof(GameObject))) as GameObject;
-        //AnimalBox.transform.position = 
+        AnimalBox.transform.position = mShip.transform.position + new Vector3(0, 1f, 0);
+
+        
     }
 
     void Update()
@@ -122,6 +143,25 @@ public class GameManager : MonoBehaviour {
             Debug.Log("x: " + Input.gyro.rotationRate.normalized.x + ", y: " + Input.gyro.rotationRate.normalized.y);
         }
         */
+
+        mBackgroundSprite.color = Color.Lerp(mColors[colorIndex], mColors[colorIndex + 1], colorTimer);
+
+        if (colorTimer < 1)
+        { // while t below the end limit...
+          // increment it at the desired rate every update:
+            colorTimer += Time.deltaTime / COLOR_CHANGE_TIME;
+        }
+        else
+        {
+            colorTimer = 0;
+            colorIndex++;
+
+            // move to the next color
+            if (colorIndex + 1 == mColors.Length)
+            {
+                colorIndex = 0;
+            } 
+        }
     }
 
     private void AddToPath()
@@ -359,5 +399,4 @@ public class GameManager : MonoBehaviour {
     {
         mRightButtonPressed = false;
     }
-
 }
