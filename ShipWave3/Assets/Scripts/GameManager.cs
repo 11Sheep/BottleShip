@@ -7,16 +7,19 @@ public class GameManager : MonoBehaviour {
 
     private static Color[] mColors = 
         {
-        new Color(1, 0, 0),
-        new Color(0, 1, 0),
-        new Color(0, 0, 1),
-        new Color(1, 0, 1),
-        new Color(0, 1, 1),
-        new Color(1, 0, 1),
-        new Color(1, 1, 0)
+        new Color(0.45f, 0.94f, 0.99f),
+        new Color(0.91f, 0.55f, 0f),
+        new Color(0.46f, 0.03f, 0.03f),
+        new Color(0.19f, 0, 0.12f),
+        new Color(0.02f, 0, 0.06f),
+        new Color(0, 0.1f, 0.32f),
+        new Color(0.99f, 0.19f, 0.42f),
+        new Color(0.99f, 0.65f, 0.45f),
     };
 
-    private static float COLOR_CHANGE_TIME = 10f;
+    private int[] mGameDifficaultyPerSection = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+
+    private static float COLOR_CHANGE_TIME = 20f;
     private static float MIN_SCALE_X = 1f;
     private static float MAX_SCALE_X = 3f;
     private static float MIN_SCALE_Y = 1f;
@@ -39,6 +42,11 @@ public class GameManager : MonoBehaviour {
     private GameObject mAll;
     private GameObject mCamera;
 
+    private GameObject mMainCanvas;
+    private GameObject mGameCanvas;
+    private GameObject mPauseCanvas;
+    private GameObject mClouds;
+
     float currentX = 0;
     float currentY = 0;
     float lastScaleX = 0;
@@ -55,14 +63,30 @@ public class GameManager : MonoBehaviour {
     private float colorTimer = 0;
     private int colorIndex = 0;
 
+    private bool mIsGamePlaying = false;
+
+
     // Use this for initialization
     void Start () {
 
         mShip = GameObject.Find("TheShip");
+        mShip.SetActive(false);
         mAll = GameObject.Find("All");
         mCamera = GameObject.Find("Main Camera");
         mBackgroundSprite = GameObject.Find("Background").GetComponent<SpriteRenderer>();
 
+        mClouds = GameObject.Find("Clouds");
+        mClouds.SetActive(false);
+
+        mMainCanvas = GameObject.Find("MainCanvas");
+        mGameCanvas = GameObject.Find("GameCanvas");
+        mPauseCanvas = GameObject.Find("PauseCanvas");
+        mGameCanvas.SetActive(false);
+        mPauseCanvas.SetActive(false);
+    }
+
+    private void StartGame()
+    {
         mParts = new PathPartInfo[NUM_OF_OBJECTS];
 
         for (int index = 0; index < NUM_OF_OBJECTS; index++)
@@ -92,75 +116,77 @@ public class GameManager : MonoBehaviour {
         // Put the cargo on the ship
         GameObject AnimalBox = Instantiate(Resources.Load("Animal1", typeof(GameObject))) as GameObject;
         AnimalBox.transform.position = mShip.transform.position + new Vector3(0, 1f, 0);
-
-        
     }
 
     void Update()
     {
-        /*
-        if (Input.GetMouseButtonDown(0))
+        if (mIsGamePlaying)
         {
-            // AddToPath();
-            mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
-        }*/
 
-        if (mLeftButtonPressed)
-        {
-            mShipAngleExtra -= 1;
-        }
-        else if (mRightButtonPressed)
-        {
-            mShipAngleExtra += 1;
-        }
-
-        mShip.transform.Translate(Vector2.right * Time.deltaTime * mShipSpeed);
-        mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
-
-        // Take the ship to the right angle
-        if (mCurrentShipAngle > mCurrentSlipAngle)
-        {
-            mCurrentShipAngle -= Time.deltaTime * mShipTurnSpeed;
-        }
-        else if (mCurrentShipAngle <= mCurrentSlipAngle)
-        {
-            mCurrentShipAngle += Time.deltaTime * mShipTurnSpeed;
-        }
-
-        if (mDirectionIsUp)
-        {
-            mShip.transform.localEulerAngles = new Vector3(mShip.transform.localEulerAngles.x, mShip.transform.localEulerAngles.y, mCurrentShipAngle - 90);       
-        }
-        else
-        {
-            mShip.transform.localEulerAngles = new Vector3(mShip.transform.localEulerAngles.x, mShip.transform.localEulerAngles.y, mCurrentShipAngle - 90);
-        }
-
-        /*
-        if (Input.gyro.enabled)
-        {
-            RotateScreen(Input.gyro.rotationRate.normalized.z);
-            Debug.Log("x: " + Input.gyro.rotationRate.normalized.x + ", y: " + Input.gyro.rotationRate.normalized.y);
-        }
-        */
-
-        mBackgroundSprite.color = Color.Lerp(mColors[colorIndex], mColors[colorIndex + 1], colorTimer);
-
-        if (colorTimer < 1)
-        { // while t below the end limit...
-          // increment it at the desired rate every update:
-            colorTimer += Time.deltaTime / COLOR_CHANGE_TIME;
-        }
-        else
-        {
-            colorTimer = 0;
-            colorIndex++;
-
-            // move to the next color
-            if (colorIndex + 1 == mColors.Length)
+            /*
+            if (Input.GetMouseButtonDown(0))
             {
-                colorIndex = 0;
-            } 
+                // AddToPath();
+                mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition());
+            }*/
+
+            if (mLeftButtonPressed || Input.GetKey(KeyCode.LeftArrow))
+            {
+                mShipAngleExtra -= 1;
+            }
+            else if (mRightButtonPressed || Input.GetKey(KeyCode.RightArrow))
+            {
+                mShipAngleExtra += 1;
+            }
+
+            mShip.transform.Translate(Vector2.right * Time.deltaTime * mShipSpeed);
+            mShip.transform.localPosition = new Vector2(mShip.transform.localPosition.x, GetShipHeightAccordingToXPosition() + 2.5f);
+
+            // Take the ship to the right angle
+            if (mCurrentShipAngle > mCurrentSlipAngle)
+            {
+                mCurrentShipAngle -= Time.deltaTime * mShipTurnSpeed;
+            }
+            else if (mCurrentShipAngle <= mCurrentSlipAngle)
+            {
+                mCurrentShipAngle += Time.deltaTime * mShipTurnSpeed;
+            }
+
+            if (mDirectionIsUp)
+            {
+                mShip.transform.localEulerAngles = new Vector3(mShip.transform.localEulerAngles.x, mShip.transform.localEulerAngles.y, mCurrentShipAngle - 90);
+            }
+            else
+            {
+                mShip.transform.localEulerAngles = new Vector3(mShip.transform.localEulerAngles.x, mShip.transform.localEulerAngles.y, mCurrentShipAngle - 90);
+            }
+
+            /*
+            if (Input.gyro.enabled)
+            {
+                RotateScreen(Input.gyro.rotationRate.normalized.z);
+                Debug.Log("x: " + Input.gyro.rotationRate.normalized.x + ", y: " + Input.gyro.rotationRate.normalized.y);
+            }
+            */
+
+            mBackgroundSprite.color = Color.Lerp(mColors[colorIndex], mColors[colorIndex + 1], colorTimer);
+
+            if (colorTimer < 1)
+            { // while t below the end limit...
+              // increment it at the desired rate every update:
+                colorTimer += Time.deltaTime / COLOR_CHANGE_TIME;
+            }
+            else
+            {
+                colorTimer = 0;
+                colorIndex++;
+
+                // move to the next color
+                if (colorIndex + 1 == mColors.Length)
+                {
+                    colorIndex = 0;
+                }
+            }
         }
     }
 
@@ -328,13 +354,6 @@ public class GameManager : MonoBehaviour {
         return returnHeight;
     }
 
-    void OnGUI()
-    {
-        if (GUI.Button(new Rect(200, 70, 100, 100), "Reset"))
-        {
-            mShip.transform.localPosition = Vector2.zero;
-        }
-    }
     /*
     void OnGUI()
     {
@@ -398,5 +417,53 @@ public class GameManager : MonoBehaviour {
     public void OnUIShipRightReleased()
     {
         mRightButtonPressed = false;
+    }
+
+    public void OnUIPlay()
+    {
+        mMainCanvas.SetActive(false);
+        mPauseCanvas.SetActive(false);
+        mGameCanvas.SetActive(true);
+
+        mShip.SetActive(true);
+        mClouds.SetActive(true);
+
+        StartGame();
+
+        mIsGamePlaying = true;
+    }
+
+    public void OnPausePressed()
+    {
+        mIsGamePlaying = false;
+
+        mPauseCanvas.SetActive(true);
+        mGameCanvas.SetActive(false);
+    }
+
+    public void OnResumePressed()
+    {
+        mIsGamePlaying = true;
+
+        mPauseCanvas.SetActive(false);
+        mGameCanvas.SetActive(true);
+    }
+
+    public void OnPlayAgainPressed()
+    {
+        // Delete all objects
+        for (int index = 0; index < NUM_OF_OBJECTS; index++)
+        {
+            Destroy(mParts[index].container);
+        }
+
+        mParts = null;
+
+        mIsGamePlaying = true;
+
+        mPauseCanvas.SetActive(false);
+        mGameCanvas.SetActive(true);
+
+        StartGame();
     }
 }
