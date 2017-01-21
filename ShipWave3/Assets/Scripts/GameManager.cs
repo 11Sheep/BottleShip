@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GameManager : MonoBehaviour {
+public class GameManager : MonoBehaviour
+{
 
-    private static Color[] mColors = 
+    private static Color[] mColors =
         {
         new Color(0.45f, 0.94f, 0.99f),
         new Color(0.91f, 0.55f, 0f),
@@ -70,9 +71,12 @@ public class GameManager : MonoBehaviour {
 
     private bool mIsGamePlaying = false;
 
+    private int mAnimalsDeadCounter;
+
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
 
         mShip = GameObject.Find("TheShip");
         mShip.SetActive(false);
@@ -122,13 +126,15 @@ public class GameManager : MonoBehaviour {
 
         // Put the cargo on the ship
         mAnimal1 = Instantiate(Resources.Load("Animal1", typeof(GameObject))) as GameObject;
-        mAnimal1.transform.position = mShip.transform.position + new Vector3(-4f, 1f, 0);
+        mAnimal1.transform.position = mShip.transform.position + new Vector3(-2f, 4f, 0);
 
         mAnimal2 = Instantiate(Resources.Load("Animal2", typeof(GameObject))) as GameObject;
-        mAnimal2.transform.position = mShip.transform.position + new Vector3(0, 1f, 0);
+        mAnimal2.transform.position = mShip.transform.position + new Vector3(0, 9f, 0);
 
         mAnimal3 = Instantiate(Resources.Load("Animal3", typeof(GameObject))) as GameObject;
-        mAnimal3.transform.position = mShip.transform.position + new Vector3(4f, 1f, 0);
+        mAnimal3.transform.position = mShip.transform.position + new Vector3(2f, 4f, 0);
+
+        mAnimalsDeadCounter = 0;
     }
 
     void Update()
@@ -184,14 +190,6 @@ public class GameManager : MonoBehaviour {
                 {
                     colorIndex = 0;
                 }
-            }
-
-            // Check if failed (all animatls are down)
-            if ((mAnimal1.transform.position.y < -10) &&
-                (mAnimal2.transform.position.y < -10) &&
-                (mAnimal3.transform.position.y < -10))
-            {
-                OnGameFailed();
             }
         }
     }
@@ -268,7 +266,7 @@ public class GameManager : MonoBehaviour {
 
     private class PathPartInfo
     {
-        public enum DirectionEnum { GoingUp = 0, GoingDown = 1};
+        public enum DirectionEnum { GoingUp = 0, GoingDown = 1 };
         public DirectionEnum direction;
 
         public float scaleX;
@@ -303,8 +301,8 @@ public class GameManager : MonoBehaviour {
 
         for (int index = 0; index < NUM_OF_OBJECTS; index++)
         {
-            if (((mParts[index].triangle.transform.position.x + Mathf.Abs(mParts[index].scaleX /2)) >= shipCurrentX)  &&
-                   ((mParts[index].triangle.transform.position.x - Mathf.Abs(mParts[index].scaleX / 2)) <= shipCurrentX)) 
+            if (((mParts[index].triangle.transform.position.x + Mathf.Abs(mParts[index].scaleX / 2)) >= shipCurrentX) &&
+                   ((mParts[index].triangle.transform.position.x - Mathf.Abs(mParts[index].scaleX / 2)) <= shipCurrentX))
 
             {
                 mCurrentPartIndex = index;
@@ -322,11 +320,11 @@ public class GameManager : MonoBehaviour {
                 }
                 else
                 {
-                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - ( mParts[index].triangle.transform.position.x + Mathf.Abs(mParts[index].scaleX/2) - shipCurrentX);
+                    positionInChunk = Mathf.Abs(mParts[index].scaleX) - (mParts[index].triangle.transform.position.x + Mathf.Abs(mParts[index].scaleX / 2) - shipCurrentX);
                     relativeXPosition = 1 - (positionInChunk / Mathf.Abs(mParts[index].scaleX));
                 }
 
-                returnHeight = mParts[index].triangle.transform.position.y + (relativeXPosition * mParts[index].scaleY) - mParts[index].scaleY/2;
+                returnHeight = mParts[index].triangle.transform.position.y + (relativeXPosition * mParts[index].scaleY) - mParts[index].scaleY / 2;
 
                 // Debug.Log("...");
                 //Debug.Log("x min: " + (mParts[index].triangle.transform.localPosition.x - Mathf.Abs(mParts[index].scaleX / 2)));
@@ -443,6 +441,7 @@ public class GameManager : MonoBehaviour {
     public void OnPausePressed()
     {
         mIsGamePlaying = false;
+        Time.timeScale = 0;
 
         mPauseCanvas.SetActive(true);
         mGameCanvas.SetActive(false);
@@ -450,6 +449,8 @@ public class GameManager : MonoBehaviour {
 
     public void OnResumePressed()
     {
+        Time.timeScale = 1;
+
         mIsGamePlaying = true;
 
         mPauseCanvas.SetActive(false);
@@ -458,6 +459,8 @@ public class GameManager : MonoBehaviour {
 
     public void OnPlayAgainPressed()
     {
+        Time.timeScale = 1;
+
         // Delete all objects
         for (int index = 0; index < NUM_OF_OBJECTS; index++)
         {
@@ -485,5 +488,21 @@ public class GameManager : MonoBehaviour {
         mGameCanvas.SetActive(false);
 
         mIsGamePlaying = false;
+    }
+
+    // Triger with animals
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        Destroy(other.gameObject);
+
+        mAnimalsDeadCounter++;
+
+        GameObject.Find("AnimalDieSound").GetComponent<AudioSource>().Play();
+
+        // Check if failed (all animatls are down)
+        if (mAnimalsDeadCounter == 3)
+        {
+            OnGameFailed();
+        }
     }
 }
